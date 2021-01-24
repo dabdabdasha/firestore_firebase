@@ -3,6 +3,7 @@ package com.example.dashaaaaaaaaa;  // поменять название пак�
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -11,6 +12,11 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -34,31 +40,32 @@ public class MainActivity extends AppCompatActivity {
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    private FirebaseAuth mAuth;
+
     @Override
     protected void onStart() {
         super.onStart();
 
 
-        db.collection("Messages").addSnapshotListener(this, new EventListener<QuerySnapshot>() {
+        db.collection("Journal").addSnapshotListener(this, new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
 
                 //измененный список всех документов в коллекции
-
+                    messageList.clear();
                     List<DocumentSnapshot> documents = value.getDocuments();
-
-
                     //пройтись по
                     for (DocumentSnapshot doc : documents) {
                         //получаем данные из документа
                         String str = doc.getString("text");
-                        messageContent.setText(str) ;
                         String str1 = doc.getString("date");
                         messageList.add(new Message(str,str1));
 
                     }
                 messageAdapter.notifyDataSetChanged();
                 }
+
+
         });
     }
 
@@ -70,7 +77,8 @@ public class MainActivity extends AppCompatActivity {
         data.put("date",mess.getDate());
         String name;
         messageContent.setText(" ");
-        //messageList.add(mess);
+        messageList.add(mess);
+
 
         db.collection("Journal").document(name = mess.getDate()+" "+mess.getContent()).set(data);
         messageAdapter.notifyDataSetChanged();
@@ -80,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         //привязка по id
         messagesRecyclerView = findViewById(R.id.messageList);
@@ -102,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 Message m = messageList.get(viewHolder.getAdapterPosition());
                 String name = m.getDate()+" "+m.getContent();
 
-                db.collection("Messages").document(name).delete();
+                db.collection("Journal").document(name).delete();
                 messageAdapter.notifyDataSetChanged();
             }
         });
